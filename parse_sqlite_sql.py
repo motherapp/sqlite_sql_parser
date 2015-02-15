@@ -119,7 +119,7 @@ class SQLParser():
             return value.strip("\"")    #mysql has no quote for insert into table name
 
             
-        value = value.replace(r"\'", r"\\'")
+        value = value.replace("\\", "\\\\")
 
         #print "@75: processing literal", value
         return value
