@@ -53,7 +53,8 @@ class SQLParser():
 
         self.curent_create_table_statement_bracket_count = 0
 
-        self.fw_data.write("SET NAMES 'utf8' COLLATE 'utf8_general_ci';\n")
+        #better set the encoding in the database first
+        #self.fw_data.write("SET NAMES 'utf8' COLLATE 'utf8_general_ci';\n")
 
         return
 
