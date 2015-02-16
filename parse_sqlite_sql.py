@@ -53,11 +53,6 @@ class SQLParser():
 
         self.curent_create_table_statement_bracket_count = 0
 
-
-        self.column_name_list = []
-
-        self.reserved_word_list = ["name"]
-
         self.fw_data.write("SET NAMES 'utf8' COLLATE 'utf8_general_ci';\n")
 
         return
@@ -129,7 +124,7 @@ class SQLParser():
             bracket_count += self.buffer_string.count("(")
             bracket_count -= self.buffer_string.count(")")
 
-        print "@130", self.buffer_string, bracket_count
+        #print "@130", self.buffer_string, bracket_count
 
 
         return bracket_count > 0
@@ -204,18 +199,6 @@ class SQLParser():
         return value
 
 
-    def replace_column_name(self, match):
-            value = match.group()
-
-            print "@210", value
-
-            if value in self.column_name_list:
-                return "`" + value + "`"
-
-            return value
-
-
-
     #HACKING POINT, process schema
     def process_schema(self, value):
       
@@ -224,20 +207,6 @@ class SQLParser():
             return ""
 
         new_value = value
-
-        if value.startswith("CREATE TABLE"):
-
-            for line in value.split("\n")[1:-1]:
-                column_name = line.strip().split(" ")[0].strip("\"").strip("'")
-                
-                if column_name in self.reserved_word_list:   #any other key words?
-                    self.column_name_list.append(column_name)
-
-
-        p = re.compile("\w+")
-        new_value = p.sub(self.replace_column_name, new_value)
-        
-        
 
 
         #http://stackoverflow.com/questions/18671/quick-easy-way-to-migrate-sqlite3-to-mysql
@@ -289,7 +258,7 @@ class SQLParser():
 
         new_value = "\n".join(new_lines)
 
-        print "@239, after processing: ", value
+#        print "@239, after processing: ", value
 
         return new_value
 
