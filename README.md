@@ -36,7 +36,6 @@ For other Perl or Python based scripts, it could be done in less than 0.1 second
 The following methods are likely to be modified for futher customization:
 
     process_literal
-    process_non_literal
-    process_line
+    process_schema
 
 
