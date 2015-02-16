@@ -21,26 +21,20 @@
 #THE SOFTWARE.
 
 
-#
-#
-#
 #author: walty@motherapp.com
 #description: parse the sql generated from sqlite3, so it could be imported to mysql
-#
-#reference: http://stackoverflow.com/questions/1067060/translating-perl-to-python
-#reference: http://stackoverflow.com/questions/18671/quick-easy-way-to-migrate-sqlite3-to-mysql
-#
-#
+#document: https://github.com/motherapp/sqlite_sql_parser/blob/master/README.md
 
 import sys
 import re
 import datetime
 
 class SQLParser():
-    def __init__(self, input_file, output_file):
+    def __init__(self, input_file):
         self.buffer_string = ""
         self.fin = open(input_file)
-        self.fw = open(output_file, "w")
+        self.fw_schema = open(input_file + ".schema.sql", "w", buffering=0)
+        self.fw_data = open(input_file + ".data.sql", "w")
 
         self.previous_string_quote = ""
         self.buffer_string = ""
@@ -76,14 +70,18 @@ class SQLParser():
 
         if(write_to_file):
             final_line = self.process_line(self.current_line)
-            self.fw.write(final_line)
+
+            if final_line.startswith("INSERT INTO"):
+                self.fw_data.write(final_line)
+            else:
+                self.fw_schema.write(final_line)
+
             self.current_line = ""
 
         return
 
     def add_buffer(self, c):
         self.buffer_string += c
-
 
 
     def read_next_char(self):
@@ -107,57 +105,6 @@ class SQLParser():
 
     def is_in_quote(self):
         return self.current_quote != ""
-
-    def process_literal(self, value):   #process literal strings
-        if value == 't':
-            return 1
-
-        if value == 'f':
-            return 0
-
-        if self.current_line.endswith("INSERT INTO "):
-            return value.strip("\"")    #mysql has no quote for insert into table name
-
-            
-        value = value.replace("\\", "\\\\")
-
-        #print "@75: processing literal", value
-        return value
-
-    def process_non_literal(self, value):   #process non literal strings
-        #print "@79: processing non-literal", value
-
-        value = value.replace("AUTOINCREMENT", "AUTO_INCREMENT")
-
-        #WARNING: NEED TO CUSTOMIZE THE FOLLOWINGS
-        value = value.replace(" text,\n", " varchar(255),\n")
-        value = value.replace(" text\n", " varchar(255)\n")
-        value = value.replace(" integer", " bigint")
-
-        return value
-
-    def process_line(self, value):  #line based processing
-        if value.startswith("BEGIN TRANSACTION") or value.startswith("COMMIT") or \
-                value.startswith("sqlite_sequence") or value.startswith("CREATE UNIQUE INDEX") or \
-                value.startswith("PRAGMA"):
-            return ""
-
-        #print "@138", value
-
-        if value.startswith("CREATE TABLE"):
-            m = re.search('CREATE TABLE ([a-z_]+)', value)
-
-            if m:
-              name, = m.groups()
-              line = '''
-DROP TABLE IF EXISTS %(name)s;
-CREATE TABLE IF NOT EXISTS %(name)s (
-'''
-              value = line % dict(name=name)
-
-
-        return value
-
 
     def start(self):
         line_number = 1;
@@ -195,7 +142,7 @@ CREATE TABLE IF NOT EXISTS %(name)s (
                 line_number += 1
 
                 if line_number % 10000 == 0:
-                    print "@51 processing line: ", line_number, "elpased: ", datetime.datetime.now() - start_time, "seconds"
+                    print "Processing line: ", line_number, "elpased: ", datetime.datetime.now() - start_time, "seconds"
 
                 if not self.is_in_quote():
                     self.flush_buffer(write_to_file = True)
@@ -205,21 +152,76 @@ CREATE TABLE IF NOT EXISTS %(name)s (
 
         self.flush_buffer(write_to_file = True)
 
+
         return
+
+
+    #hacking point, process literal strings
+    def process_literal(self, value):   
+        #print "@75: processing literal", value
+
+        if value == 't':
+            return 1
+
+        if value == 'f':
+            return 0
+
+        if self.current_line.endswith("INSERT INTO "):
+            return value.strip("\"")    #mysql has no quote for insert into table name
+
+            
+        value = value.replace("\\", "\\\\")
+
+        return value
+
+    #hacking point, process non-literal strings
+    def process_non_literal(self, value):   
+        #print "@79: processing non-literal", value
+
+        value = value.replace("AUTOINCREMENT", "AUTO_INCREMENT")
+
+        return value
+
+    #hacking point, process entire line, note that the line break inside value would not count
+    def process_line(self, value):  #line based processing
+        if value.startswith("BEGIN TRANSACTION") or value.startswith("COMMIT") or \
+                value.startswith("sqlite_sequence") or value.startswith("CREATE UNIQUE INDEX") or \
+                value.startswith("PRAGMA"):
+            return ""
+
+
+
+        #print "@138", value
+        if value.startswith("CREATE TABLE"):
+            m = re.search('CREATE TABLE ([a-z_]+)', value)
+
+            if m:
+              name, = m.groups()
+              line = '''
+DROP TABLE IF EXISTS %(name)s;
+CREATE TABLE IF NOT EXISTS %(name)s (
+'''
+              value = line % dict(name=name)
+
+
+        return value
+
+
+
 
 def main():
     if __name__ == "__main__":
-        if len(sys.argv) != 3:
-            print "Usage: python " + sys.argv[0] + " input_file output_file\n"
+        if len(sys.argv) != 2:
+            print "Usage: python " + sys.argv[0] + " input_file\n"
             return -1
 
         input_file = sys.argv[1]
-        output_file = sys.argv[2]
 
-        parser = SQLParser(input_file, output_file)
+        parser = SQLParser(input_file)
 
         parser.start()
 
         print "Done."
+        print "Schema and data files are generated."
 
 main()
