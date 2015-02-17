@@ -19,13 +19,14 @@ It's strongly advised that one should further modify the DB schema for his own p
 
 1. Replace some `text` field with `varchar(255)`, for better performance 
 2. Replace some `integer` with  `bigint`
+3. add quote for tables named by reserved keywords
 
 One should also note that this script would replace _all_ values of `t` with `1`, and _all_ values of `f` with `0`, in order to adapt to boolean field change. If you really need a `t` there, you might change back manually.
 
 
 
 ## Advantages
-Unlike most other line based parsers, this parser treat literal strings and no literal strings _separately_. So even if you table data contains some special statements like `CREATE TABLE`, `INSERT VALUE` or 'AUTOINCREMENT`, they would _not_ be updated. 
+Unlike most other line based parsers, this parser treat literal strings and non-literal strings _separately_. So even if you table data contains some special statements like `CREATE TABLE`, `INSERT VALUE` or 'AUTOINCREMENT`, they would _not_ be updated. 
 
 ## Disadvantages
 It's very slow. Took about 2 seconds to parse a SQL file of 100,000 lines.
