@@ -76,6 +76,8 @@ class SQLParser():
         if write_to_file:
             if self.current_line.startswith("INSERT INTO"):
                 self.fw_data.write(self.current_line)
+                if not self.current_line.strip().endswith(";"):
+                    self.fw_data.write(";\n")
             else:
                 self.current_line = self.process_schema(self.current_line)
                 self.fw_schema.write(self.current_line)
