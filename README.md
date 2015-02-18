@@ -7,11 +7,17 @@ This script parses the SQL files exported form `sqlite3 .dump`, and make it comp
 
 ## Basic Usage
 
-    python parse_sqlite_sql.py export.sql
+    python parse_sqlite_sql.py dump.sql
 
-Two files would be generated: `export.sql.schema.sql` and `export.sql.data.sql`
+Two files would be generated: `dump.sql.schema.sql` and `dump.sql.data.sql`
 
 One is for DB schema, and the other is for DB data, both are updated for MySQL import purpose.
+
+After final manual modification, one could use the following commands to import the database:
+
+    mysql -u <user_name> -p <database_name>  --default-character-set=utf8 < dump.sql.schema.sql
+    mysql -u <user_name> -p <database_name>  --default-character-set=utf8 < dump.sql.data.sql
+
 
 ## Further Notes
 
