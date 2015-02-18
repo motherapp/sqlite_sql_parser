@@ -7,6 +7,7 @@ This script parses the SQL files exported form `sqlite3 .dump`, and make it comp
 
 ## Basic Usage
 
+    sqlite3 <database_file> .dump   >   dump.sql
     python parse_sqlite_sql.py dump.sql
 
 Two files would be generated: `dump.sql.schema.sql` and `dump.sql.data.sql`
